@@ -51,7 +51,7 @@ ${BIN_PREFIX%/}/bin/git clone https://github.com/wolf9466/cpuminer-multi.git /us
 cd /usr/src/cpuminer-multi && \
 ./autogen.sh && \
 ./configure CFLAGS="-march=native" --prefix=$BIN_PREFIX && \
-${BIN_PREFIX%/}X/bin/make && \
+${BIN_PREFIX%/}/bin/make && \
 ${BIN_PREFIX%/}/bin/make install
 
 }
