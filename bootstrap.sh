@@ -1,6 +1,6 @@
 #!/bin/bash
 # ----------------------------------------------------------------------
-# Monero Miner Boostrapper for RHEL Based Hosts v0.0.1
+# Monero Miner Boostrapper for RHEL/Fedora Based Hosts v0.0.2
 # ----------------------------------------------------------------------
 # Copyright (C) 2017 Dominic Robinson
 #
@@ -18,46 +18,55 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ----------------------------------------------------------------------
 
-# Custom Options
-declare -r WALLET_ADDRESS=`[[ -z "$1" ]] && echo "41h7QyCBwVFU4mWxRjjDAC3yDvuA6rjxcJ2PhcEL6KTMfvDnxr2nzaw4LnfYhmJgCVQJJG6tPJJntGwRq77fcjcW2zh1rYg" || echo "$1"`
-declare -r POOL_ADDRESS=`[[ -z "$2" ]] && echo "monerohash.com" || echo "$2"`
-declare -r POOL_PORT=`[[ -z "$3" ]] && echo "3333" || echo "$3"`
+# Pool Options - provide default values here, can be overridden
+# by passing in values as arguments.
+declare -r WALLET_ADDRESS="${1:-41h7QyCBwVFU4mWxRjjDAC3yDvuA6rjxcJ2PhcEL6KTMfvDnxr2nzaw4LnfYhmJgCVQJJG6tPJJntGwRq77fcjcW2zh1rYg}"
+declare -r POOL_ADDRESS="${2:-monerohash.com}"
+declare -r POOL_PORT="${3:-3333}"
 
-# Distro Specififc
+# Distro specififc
+declare -r PACKAGE_MANAGER=`if [[ $(cat /etc/fedora-release | awk '{print $1;}') == "Fedora" ]] ; then echo "dnf"; else echo "yum" ; fi`
+
+# No trailing slash unless root i.e. "/" or "/directory"
 declare -r BIN_PREFIX="/usr"
+
+# Get maximum number of supported cpu threads
 declare -r MINER_THREADS=`$BIN_PREFIX/bin/grep -c ^processor /proc/cpuinfo`
 
+# Install build dependencies
 function install_dependencies {
 
-$BIN_PREFIX/bin/yum clean all && \
-$BIN_PREFIX/bin/yum -y update && \
-$BIN_PREFIX/bin/yum -y install git curl-devel && \
-$BIN_PREFIX/bin/yum -y groupinstall "Development Tools" && \
-$BIN_PREFIX/bin/yum clean all
+${BIN_PREFIX%/}/bin/$PACKAGE_MANAGER clean all && \
+${BIN_PREFIX%/}/bin/$PACKAGE_MANAGER -y update && \
+${BIN_PREFIX%/}/bin/$PACKAGE_MANAGER -y install git curl-devel && \
+${BIN_PREFIX%/}/bin/$PACKAGE_MANAGER -y groupinstall "Development Tools" && \
+${BIN_PREFIX%/}/bin/$PACKAGE_MANAGER clean all
 
 }
 
+# Compile the cpu miner executable and move into $PATH
 function build_miner {
 
-$BIN_PREFIX/bin/git clone https://github.com/wolf9466/cpuminer-multi.git /usr/src/cpuminer-multi && \
-cd $BIN_PREFIX/src/cpuminer-multi && \
+${BIN_PREFIX%/}/bin/git clone https://github.com/wolf9466/cpuminer-multi.git /usr/src/cpuminer-multi && \
+cd /usr/src/cpuminer-multi && \
 ./autogen.sh && \
 ./configure CFLAGS="-march=native" --prefix=$BIN_PREFIX && \
-$BIN_PREFIX/bin/make && \
-$BIN_PREFIX/bin/make install
+${BIN_PREFIX%/}X/bin/make && \
+${BIN_PREFIX%/}/bin/make install
 
 }
 
+# Create self restarting systemd unit
 function create_service {
 
-$BIN_PREFIX/bin/cat <<EOF > /etc/systemd/system/minerd.service
+${BIN_PREFIX%/}/bin/cat <<EOF > /etc/systemd/system/minerd.service
 [Unit]
 Description=Monero Miner Daemon
 After=network.target
 
 [Service]
 TimeoutStartSec=0
-ExecStart=$BIN_PREFIX/bin/minerd -a cryptonight \
+ExecStart=${BIN_PREFIX%/}/bin/minerd -a cryptonight \
          -o stratum+tcp://$POOL_ADDRESS:$POOL_PORT \
          -u $WALLET_ADDRESS \
          -t $MINER_THREADS -p x
@@ -70,23 +79,30 @@ EOF
 
 }
 
+# Check for root privileges, if none exist escalate self using sudo.
 if [ "$(id -u)" != "0" ]; then
-    $BIN_PREFIX/bin/echo "This script must be run as root!"
-    $BIN_PREFIX/bin/echo "Trying sudo..."
-    $BIN_PREFIX/bin/sudo "$0" "$@"
+    ${BIN_PREFIX%/}/bin/echo "This script must be run as root!"
+    ${BIN_PREFIX%/}/bin/echo "Trying sudo..."
+    ${BIN_PREFIX%/}/bin/sudo "$0" "$@"
     exit $?
 fi
 
 install_dependencies && \
-$BIN_PREFIX/bin/echo "Dependencies Installed!" && \
+${BIN_PREFIX%/}/bin/echo "Dependencies Installed!" && \
 
-build_miner && \
-$BIN_PREFIX/bin/echo "Miner Compiled Successfully!" && \
+${BIN_PREFIX%/}/bin/sleep 3 && \
 
 create_service && \
-$BIN_PREFIX/bin/echo "Systemd Unit File Created!" && \
+${BIN_PREFIX%/}/bin/echo "Systemd Unit File Created!" && \
 
-$BIN_PREFIX/bin/systemctl daemon-reload && \
-$BIN_PREFIX/bin/systemctl enable minerd.service && \
-$BIN_PREFIX/bin/systemctl start minerd.service && \
-$BIN_PREFIX/bin/echo "Miner Service Enabled/Started!"
+${BIN_PREFIX%/}/bin/sleep 3 && \
+
+build_miner && \
+${BIN_PREFIX%/}/bin/echo "Miner Compiled Successfully!" && \
+
+${BIN_PREFIX%/}/bin/sleep 3 && \
+
+${BIN_PREFIX%/}/bin/systemctl daemon-reload && \
+${BIN_PREFIX%/}/bin/systemctl enable minerd.service && \
+${BIN_PREFIX%/}/bin/systemctl start minerd.service && \
+${BIN_PREFIX%/}/bin/echo "Miner Service Enabled/Started!"
