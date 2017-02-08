@@ -4,7 +4,7 @@ A bootstrapping script for easy deployment of Monero pool miner nodes
 ###Details
 ####Compatible Distros:
 - RHEL/RHEL-like 7.x
-- Fedora >= 22
+- All currently supported Fedora versions.
 
 ####Example Usage:
 ```bash
