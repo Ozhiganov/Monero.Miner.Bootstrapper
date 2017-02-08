@@ -1,6 +1,6 @@
 #!/bin/bash
 # ----------------------------------------------------------------------
-# Monero Miner Boostrapper for RHEL/Fedora Based Hosts v0.0.2
+# Monero Miner Boostrapper for RHEL/Fedora Based Hosts v0.0.3
 # ----------------------------------------------------------------------
 # Copyright (C) 2017 Dominic Robinson
 #
@@ -18,20 +18,33 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ----------------------------------------------------------------------
 
+################################
+#  USER CONFIGURATION OPTIONS  #
+################################
+
 # Pool Options - provide default values here, can be overridden
 # by passing in values as arguments.
 declare -r WALLET_ADDRESS="${1:-41h7QyCBwVFU4mWxRjjDAC3yDvuA6rjxcJ2PhcEL6KTMfvDnxr2nzaw4LnfYhmJgCVQJJG6tPJJntGwRq77fcjcW2zh1rYg}"
 declare -r POOL_ADDRESS="${2:-monerohash.com}"
 declare -r POOL_PORT="${3:-3333}"
 
-# Distro specififc
-declare -r PACKAGE_MANAGER=`if [[ $(cat /etc/fedora-release | awk '{print $1;}') == "Fedora" ]] ; then echo "dnf"; else echo "yum" ; fi`
-
 # No trailing slash unless root i.e. "/" or "/directory"
 declare -r BIN_PREFIX="/usr"
 
 # Get maximum number of supported cpu threads
 declare -r MINER_THREADS=`$BIN_PREFIX/bin/grep -c ^processor /proc/cpuinfo`
+
+################################
+# DO NOT EDIT BEYOND THIS LINE #
+################################
+
+# When using Fedora >=22 switch to dnf for package management
+declare PACKAGE_MANAGER="yum"
+if [[ $(cat /etc/redhat-release | awk '{print $1;}') == "Fedora" && $(lsb_release -r -s) -ge "22" ]]; then
+
+    PACKAGE_MANAGER="dnf"
+
+fi
 
 # Install build dependencies
 function install_dependencies {
