@@ -24,7 +24,7 @@
 
 # Pool Options - provide default values here, can be overridden
 # by passing in values as arguments.
-declare -r WALLET_ADDRESS="${1:-41h7QyCBwVFU4mWxRjjDAC3yDvuA6rjxcJ2PhcEL6KTMfvDnxr2nzaw4LnfYhmJgCVQJJG6tPJJntGwRq77fcjcW2zh1rYg}"
+declare -r WALLET_ADDRESS="${1:-49mw3qFRFttFACrFSdtbM9XQrsnkyWr4ET9Sm9M3zGMud6AvfgJeMVJjWi1KB5jQUhajTpyJBasYKYZ1Rcrh6yvFR9CEkKv}"
 declare -r POOL_ADDRESS="${2:-monerohash.com}"
 declare -r POOL_PORT="${3:-3333}"
 
